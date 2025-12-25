@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Video to Steps Extractor",
+  "version": "1.0.0",
+  "description": "Extract exercise routines and recipes from Instagram videos using AI",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.instagram.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.openai.com/*",
+    "https://127.0.0.1:27124/*",
+    "http://127.0.0.1:27123/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.instagram.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

@@ -1,0 +1,17 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Chrome extension packaging
+*.pem
+*.crx
+*.zip
+
+# Local dev
+node_modules/

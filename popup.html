@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 360px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+
+    .header {
+      padding: 16px;
+      background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: #262626;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .status-dot.ready { background: #4ade80; }
+    .status-dot.no-video { background: #f87171; }
+    .status-dot.processing { background: #fbbf24; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-text {
+      font-size: 13px;
+    }
+
+    .section {
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .type-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .type-btn {
+      padding: 12px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: transparent;
+      color: #e0e0e0;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+
+    .type-btn:hover {
+      border-color: #555;
+      background: #262626;
+    }
+
+    .type-btn.selected {
+      border-color: #0095f6;
+      background: rgba(0, 149, 246, 0.1);
+    }
+
+    .type-btn .icon {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .extract-btn {
+      width: 100%;
+      padding: 14px;
+      background: #0095f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .extract-btn:hover:not(:disabled) {
+      background: #1aa3ff;
+    }
+
+    .extract-btn:disabled {
+      background: #333;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #262626;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .settings-toggle:hover {
+      background: #333;
+    }
+
+    .settings-panel {
+      display: none;
+      padding: 12px;
+      background: #262626;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .settings-panel.open {
+      display: block;
+    }
+
+    .setting-row {
+      margin-bottom: 12px;
+    }
+
+    .setting-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-row label {
+      display: block;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .setting-row input {
+      width: 100%;
+      padding: 8px 10px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 13px;
+    }
+
+    .setting-row input:focus {
+      outline: none;
+      border-color: #0095f6;
+    }
+
+    .result-panel {
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .result-panel.show {
+      display: block;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .result-actions button {
+      padding: 6px 12px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+
+    .copy-btn {
+      background: #333;
+      color: #e0e0e0;
+    }
+
+    .copy-btn:hover {
+      background: #444;
+    }
+
+    .obsidian-btn {
+      background: #7c3aed;
+      color: white;
+    }
+
+    .obsidian-btn:hover:not(:disabled) {
+      background: #8b5cf6;
+    }
+
+    .obsidian-btn:disabled {
+      background: #333;
+      color: #666;
+    }
+
+    .topic-input {
+      margin-top: 12px;
+      padding: 12px;
+      background: #262626;
+      border-radius: 8px;
+    }
+
+    .topic-input label {
+      display: block;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .topic-input input {
+      width: 100%;
+      padding: 8px 10px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 13px;
+    }
+
+    .topic-input input:focus {
+      outline: none;
+      border-color: #7c3aed;
+    }
+
+    .save-status {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #4ade80;
+    }
+
+    .result-content {
+      background: #262626;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Video to Steps Extractor</h1>
+    <p>Extract exercises & recipes from Instagram videos</p>
+  </div>
+
+  <div class="content">
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-text" id="statusText">Checking...</span>
+    </div>
+
+    <div id="errorPanel" class="error" style="display: none;"></div>
+
+    <div class="section">
+      <div class="section-title">Content Type</div>
+      <div class="type-buttons">
+        <button class="type-btn selected" data-type="exercise">
+          <span class="icon">💪</span>
+          Exercise
+        </button>
+        <button class="type-btn" data-type="recipe">
+          <span class="icon">🍳</span>
+          Recipe
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-toggle" id="settingsToggle">
+      <span>Settings</span>
+      <span>▼</span>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel">
+      <div class="setting-row">
+        <label>Anthropic API Key</label>
+        <input type="password" id="anthropicKey" placeholder="sk-ant-...">
+      </div>
+      <div class="setting-row">
+        <label>OpenAI API Key (for audio transcription)</label>
+        <input type="password" id="openaiKey" placeholder="sk-...">
+      </div>
+      <div class="setting-row">
+        <label>Number of frames to capture</label>
+        <input type="number" id="numFrames" value="8" min="4" max="16">
+      </div>
+      <div class="setting-row" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #333;">
+        <label>Obsidian Local REST API URL</label>
+        <input type="text" id="obsidianUrl" value="https://127.0.0.1:27124" placeholder="https://127.0.0.1:27124">
+      </div>
+      <div class="setting-row">
+        <label>Obsidian API Key (required)</label>
+        <input type="password" id="obsidianKey" placeholder="From plugin settings">
+      </div>
+      <div class="setting-row">
+        <label>Base folder in vault</label>
+        <input type="text" id="obsidianFolder" value="ai-extractions" placeholder="ai-extractions">
+      </div>
+    </div>
+
+    <button class="extract-btn" id="extractBtn" disabled>Extract Steps</button>
+
+    <div class="result-panel" id="resultPanel">
+      <div class="result-header">
+        <span class="section-title">Extracted Steps</span>
+        <div class="result-actions">
+          <button class="copy-btn" id="copyBtn">Copy</button>
+          <button class="obsidian-btn" id="saveObsidianBtn">Save to Obsidian</button>
+        </div>
+      </div>
+      <div class="result-content" id="resultContent"></div>
+      <div class="topic-input">
+        <label>Topic/Subfolder (optional)</label>
+        <input type="text" id="topicInput" placeholder="e.g., mobility, hiit, breakfast">
+      </div>
+      <div class="save-status" id="saveStatus"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
