@@ -15,3 +15,11 @@ Thumbs.db
 
 # Local dev
 node_modules/
+
+# Server
+server/.venv/
+server/.env
+server/test_*.jpg
+server/test_*.png
+__pycache__/
+*.pyc

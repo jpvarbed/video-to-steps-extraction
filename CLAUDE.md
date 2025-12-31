@@ -123,6 +123,40 @@ video-to-steps-extension/
 - Anthropic Claude API (Vision)
 - Obsidian + Local REST API plugin (optional)
 
+## Server (for mobile/remote use)
+
+The `server/` directory contains a Flask server that can process Instagram URLs without the browser extension.
+
+### Setup
+```bash
+cd server
+cp .env.example .env
+# Edit .env with your API keys
+./run.sh
+```
+
+### Usage
+```bash
+curl -X POST http://localhost:5555/extract \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://instagram.com/reel/ABC123", "type": "exercise", "topic": "mobility"}'
+```
+
+### iOS Shortcut Integration
+Create an iOS Shortcut that:
+1. Accepts share from Instagram
+2. POSTs to `http://YOUR_MAC_IP:5555/extract`
+3. Shows result or saves to Obsidian
+
+### How it works
+- Uses Playwright (headless Chrome) to load Instagram
+- Captures video frames via canvas
+- Sends to Claude Vision for analysis
+- Returns structured JSON + saves to Obsidian
+
+### Note
+Tested and working as of Dec 2024. Instagram may change their anti-bot measures.
+
 ## Related Project
 
 This is the "reverse" of `article-to-video` project which converts articles → short videos.
