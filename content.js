@@ -6,28 +6,58 @@ class VideoExtractor {
     this.isExtracting = false;
   }
 
-  // Find the video element on the Instagram post
+  // Find the video element on the Instagram post/reel
   findVideoElement() {
-    // Instagram uses video elements for posts
     const videos = document.querySelectorAll('video');
 
-    // Find the main post video (usually the largest or most visible)
+    // Find the main video (largest visible one with actual content)
     let mainVideo = null;
     let maxArea = 0;
 
     videos.forEach(video => {
       const rect = video.getBoundingClientRect();
       const area = rect.width * rect.height;
-      // Check if video is visible in viewport
+      // Check if video is visible in viewport and has loaded
       const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+      const hasContent = video.videoWidth > 0;
 
-      if (isVisible && area > maxArea) {
+      if (isVisible && hasContent && area > maxArea) {
         maxArea = area;
         mainVideo = video;
       }
     });
 
     return mainVideo;
+  }
+
+  // Wait for video element to appear (handles Instagram's dynamic loading)
+  waitForVideo(timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      // Check immediately first
+      const video = this.findVideoElement();
+      if (video) {
+        resolve(video);
+        return;
+      }
+
+      const startTime = Date.now();
+
+      // Poll for video element
+      const checkInterval = setInterval(() => {
+        const video = this.findVideoElement();
+
+        if (video) {
+          clearInterval(checkInterval);
+          resolve(video);
+          return;
+        }
+
+        if (Date.now() - startTime > timeout) {
+          clearInterval(checkInterval);
+          reject(new Error('Video not found - try scrolling to make sure the video is visible'));
+        }
+      }, 200);
+    });
   }
 
   // Capture a frame from the video as base64
@@ -163,12 +193,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === 'checkForVideo') {
-    const video = extractor.findVideoElement();
-    sendResponse({
-      hasVideo: !!video,
-      duration: video ? video.duration : 0
-    });
-    return true;
+    // Wait for video to appear (handles dynamic loading)
+    extractor.waitForVideo(3000)
+      .then(video => {
+        sendResponse({
+          hasVideo: true,
+          duration: video.duration || 0
+        });
+      })
+      .catch(() => {
+        sendResponse({
+          hasVideo: false,
+          duration: 0
+        });
+      });
+    return true; // Keep channel open for async response
   }
 });
 
@@ -179,10 +218,8 @@ async function handleExtraction(options) {
   showExtractionOverlay('Finding video...');
 
   try {
-    const video = extractor.findVideoElement();
-    if (!video) {
-      throw new Error('No video found on this page');
-    }
+    // Wait for video element to appear
+    const video = await extractor.waitForVideo(5000);
 
     // Wait for video to be ready
     if (video.readyState < 2) {
