@@ -137,6 +137,12 @@ cp .env.example .env
 
 ### Usage
 ```bash
+# Auto-detect content type (exercise or recipe)
+curl -X POST http://localhost:5555/extract \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://instagram.com/reel/ABC123"}'
+
+# Or specify type and topic explicitly
 curl -X POST http://localhost:5555/extract \
   -H "Content-Type: application/json" \
   -d '{"url": "https://instagram.com/reel/ABC123", "type": "exercise", "topic": "mobility"}'
@@ -154,8 +160,36 @@ Create an iOS Shortcut that:
 - Sends to Claude Vision for analysis
 - Returns structured JSON + saves to Obsidian
 
+### Testing the server
+
+```bash
+cd ~/dev/video-to-steps-extension/server
+
+# Kill any existing server
+pkill -9 -f "python.*server"
+
+# Start with env vars (keys from ~/dev/.env.local)
+ANTHROPIC_API_KEY="your-key" \
+OBSIDIAN_API_KEY="your-key" \
+OBSIDIAN_API_PORT="https://127.0.0.1:27124" \
+.venv/bin/python server.py
+
+# In another terminal, test:
+curl -s http://localhost:5555/health
+
+# Test extraction (auto-detects type):
+curl -s -X POST "http://localhost:5555/extract" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://www.instagram.com/p/DSz6Ma_DXQe"}'
+
+# Or specify type explicitly:
+curl -s -X POST "http://localhost:5555/extract" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://www.instagram.com/reel/ABC123","type":"exercise","topic":"mobility"}'
+```
+
 ### Note
-Tested and working as of Dec 2024. Instagram may change their anti-bot measures.
+Tested and working as of Jan 2026. Instagram may change their anti-bot measures.
 
 ## Related Project
 

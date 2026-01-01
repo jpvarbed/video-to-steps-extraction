@@ -29,7 +29,7 @@ app = Flask(__name__)
 
 # Configuration - set these as environment variables or update here
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
-OBSIDIAN_API_URL = os.environ.get('OBSIDIAN_API_URL', 'https://127.0.0.1:27124')
+OBSIDIAN_API_URL = os.environ.get('OBSIDIAN_API_URL') or os.environ.get('OBSIDIAN_API_PORT', 'https://127.0.0.1:27124').rstrip('/')
 OBSIDIAN_API_KEY = os.environ.get('OBSIDIAN_API_KEY', '')
 OBSIDIAN_FOLDER = os.environ.get('OBSIDIAN_FOLDER', 'ai-extractions')
 
@@ -130,7 +130,40 @@ def analyze_with_claude(frames: list, content_type: str) -> dict:
     # Build content with images
     content = []
 
-    if content_type == 'exercise':
+    if content_type == 'auto' or not content_type:
+        # Auto-detect content type
+        content.append({
+            "type": "text",
+            "text": """Analyze these video frames from an Instagram video.
+
+First, determine if this is:
+- An EXERCISE/FITNESS video (workout, stretching, mobility, etc.)
+- A RECIPE/COOKING video (food preparation, cooking, etc.)
+
+Then extract the relevant structured information.
+
+For EXERCISE content, return JSON:
+{
+  "detected_type": "exercise",
+  "title": "Workout name",
+  "exercises": [
+    {"name": "...", "sets": "...", "reps": "...", "duration": "...", "rest": "...", "notes": "..."}
+  ],
+  "notes": "Overall notes"
+}
+
+For RECIPE content, return JSON:
+{
+  "detected_type": "recipe",
+  "title": "Recipe name",
+  "ingredients": ["..."],
+  "steps": ["..."],
+  "notes": "Tips or variations"
+}
+
+Read all on-screen text carefully as it contains important details."""
+        })
+    elif content_type == 'exercise':
         content.append({
             "type": "text",
             "text": """Analyze these video frames from an Instagram fitness video.
@@ -142,6 +175,7 @@ Extract the complete exercise routine including:
 
 Return as JSON:
 {
+  "detected_type": "exercise",
   "title": "Workout name",
   "exercises": [
     {"name": "...", "sets": "...", "reps": "...", "duration": "...", "rest": "...", "notes": "..."}
@@ -160,6 +194,7 @@ Extract the complete recipe including:
 
 Return as JSON:
 {
+  "detected_type": "recipe",
   "title": "Recipe name",
   "ingredients": ["..."],
   "steps": ["..."],
@@ -206,6 +241,9 @@ Return as JSON:
 
 def format_markdown(data: dict, content_type: str, url: str) -> str:
     """Format extracted data as Obsidian markdown"""
+    # Use detected_type if available
+    if 'detected_type' in data:
+        content_type = data['detected_type']
 
     now = datetime.now().isoformat()
 
@@ -264,6 +302,10 @@ def save_to_obsidian(markdown: str, data: dict, content_type: str, topic: str = 
     if not OBSIDIAN_API_KEY:
         return None
 
+    # Use detected_type if available
+    if 'detected_type' in data:
+        content_type = data['detected_type']
+
     # Generate filename
     title = data.get('title', f'{content_type}-{int(datetime.now().timestamp())}')
     filename = re.sub(r'[^a-z0-9\s-]', '', title.lower())
@@ -307,7 +349,7 @@ def extract():
 
     data = request.json or {}
     url = data.get('url', '')
-    content_type = data.get('type', 'exercise')
+    content_type = data.get('type', 'auto')  # Default to auto-detect
     topic = data.get('topic', '')
 
     if not url:
